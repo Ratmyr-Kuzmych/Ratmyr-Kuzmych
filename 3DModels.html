@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RK TEST - 3D Hub</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+    <link rel="stylesheet" href="styler.css">
+</head>
+<body class="workspace-body">
+
+    <div id="control-panel">
+        <h2>3D Systems Panel</h2>
+        
+        <button class="model-btn active" onclick="switchModel(this, 'models/Dedglitch.glb')">DEDGLITCH CORE</button>
+        <button class="model-btn" onclick="switchModel(this, 'models/knife.glb')">KNIFE SYSTEM</button>
+
+        <a href="index.html" class="home-link">← RETURN TO INDEX</a>
+    </div>
+
+    <div id="display-area">
+        <div id="model-title">ACTIVE RUNTIME: models/Dedglitch.glb</div>
+        
+        <model-viewer id="main-viewer"
+                      src="models/Dedglitch.glb" 
+                      alt="3D Live View Asset Content" 
+                      auto-rotate 
+                      camera-controls>
+        </model-viewer>
+    </div>
+
+    <script>
+        function switchModel(buttonElement, modelFileName) {
+            const viewer = document.getElementById('main-viewer');
+            const title = document.getElementById('model-title');
+
+            // 1. Swap the 3D asset resource path target
+            viewer.setAttribute('src', modelFileName);
+            
+            // 2. Update HUD display label content text
+            title.innerText = `ACTIVE RUNTIME: ${modelFileName}`;
+
+            // 3. Reset active states across button lists
+            document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('active'));
+            buttonElement.classList.add('active');
+        }
+    </script>
+
+</body>
+</html>
