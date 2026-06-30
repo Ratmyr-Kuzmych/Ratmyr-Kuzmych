@@ -11,17 +11,16 @@
     <div id="control-panel">
         <h2>3D Systems Panel</h2>
         
-        <button class="model-btn active" onclick="switchModel(this, 'models/Dedglitch.glb')">DEDGLITCH CORE</button>
-        <button class="model-btn" onclick="switchModel(this, 'models/knife.glb')">KNIFE SYSTEM</button>
+        <div id="button-container" style="display: flex; flex-direction: column; gap: 12px;"></div>
 
         <a href="index.html" class="home-link">← RETURN TO INDEX</a>
     </div>
 
     <div id="display-area">
-        <div id="model-title">ACTIVE RUNTIME: models/Dedglitch.glb</div>
+        <div id="model-title">INITIALIZING INVENTORY ENGINE...</div>
         
         <model-viewer id="main-viewer"
-                      src="models/Dedglitch.glb" 
+                      src="" 
                       alt="3D Live View Asset Content" 
                       auto-rotate 
                       camera-controls>
@@ -29,17 +28,51 @@
     </div>
 
     <script>
-        function switchModel(buttonElement, modelFileName) {
-            const viewer = document.getElementById('main-viewer');
-            const title = document.getElementById('model-title');
+        const viewer = document.getElementById('main-viewer');
+        const title = document.getElementById('model-title');
+        const btnContainer = document.getElementById('button-container');
 
-            // 1. Swap the 3D asset resource path target
-            viewer.setAttribute('src', modelFileName);
-            
-            // 2. Update HUD display label content text
-            title.innerText = `ACTIVE RUNTIME: ${modelFileName}`;
+        // 1. Fetch the model array straight from your models.json list
+        fetch('models.json')
+            .then(response => response.json())
+            .then(modelsList => {
+                modelsList.forEach((fileName, index) => {
+                    const fullPath = `models/${fileName}`;
+                    
+                    // Convert file string name to a tactical system label (e.g. "PcOnDeskShelf.glb" -> "PCONDESKSHELF SYSTEM")
+                    const cleanName = fileName.replace('.glb', '').toUpperCase() + ' SYSTEM';
 
-            // 3. Reset active states across button lists
+                    // 2. Build the rigid console menu button
+                    const button = document.createElement('button');
+                    button.className = 'model-btn';
+                    button.innerText = cleanName;
+                    
+                    // Attach runtime hot-reloader execution function
+                    button.onclick = function() {
+                        switchModel(this, fullPath);
+                    };
+
+                    // 3. Set the first item in the list as default view on system boot
+                    if (index === 0) {
+                        button.classList.add('active');
+                        viewer.setAttribute('src', fullPath);
+                        title.innerText = `ACTIVE RUNTIME: ${fullPath}`;
+                    }
+
+                    // Append to sidebar layer matrix
+                    btnContainer.appendChild(button);
+                });
+            })
+            .catch(err => {
+                console.error("Database initialization error:", err);
+                title.innerText = "SYSTEM ERROR: FAILED TO PARSE DATA FILE MAP";
+            });
+
+        // Frame switcher context engine logic
+        function switchModel(buttonElement, modelFilePath) {
+            viewer.setAttribute('src', modelFilePath);
+            title.innerText = `ACTIVE RUNTIME: ${modelFilePath}`;
+
             document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('active'));
             buttonElement.classList.add('active');
         }
