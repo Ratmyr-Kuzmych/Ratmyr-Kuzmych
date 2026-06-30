@@ -3,18 +3,17 @@
    ========================================================================== */
 
 :root {
-    --bg-matrix: #05070d;        /* deeper, cleaner midnight blue-black */
-    --panel-solid: #0d1320;      /* subtle navy for panels */
-    --border-frame: #1a1f2b;     /* cooler, more coherent border tone */
+    --bg-matrix: #05070d;        /* Deeper, cleaner midnight blue-black */
+    --panel-solid: #0d1320;      /* Subtle navy for panels */
+    --border-frame: #1a1f2b;     /* Cooler, more coherent border tone */
 
-    --neon-green: #00ff7a;       /* bright, modern neon green */
-    --neon-cyan: #00eaff;        /* slightly softer cyan for harmony */
-    --neon-pink: #ff2f92;        /* vivid, clean neon magenta */
+    --neon-green: #00ff7a;       /* Bright, modern neon green */
+    --neon-cyan: #00eaff;        /* Slightly softer cyan for harmony */
+    --neon-pink: #ff2f92;        /* Vivid, clean neon magenta */
 
-    --text-white: #e4e6eb;       /* readable soft white */
-    --text-gray: #9aa0a6;        /* balanced neutral gray */
+    --text-white: #e4e6eb;       /* Readable soft white */
+    --text-gray: #9aa0a6;        /* Balanced neutral gray */
 }
-
 
 body {
     background-color: var(--bg-matrix);
@@ -114,11 +113,14 @@ p {
 #control-panel {
     width: 300px;
     background-color: var(--panel-solid);
-    border-right: 3px double var(--neon-cyan); /* Double line old school frame border */
+    border-right: 3px double var(--neon-cyan);
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    
+    /* Lock the panel's maximum height to the screen boundaries */
+    height: 100vh; 
+    max-height: 100vh;
     box-sizing: border-box;
     z-index: 10;
 }
@@ -131,7 +133,44 @@ p {
     padding-bottom: 10px;
     text-transform: uppercase;
     letter-spacing: 2px;
-    text-shadow: 0 0 5px rgba(0, 255, 102, 0.4);
+    text-shadow: 0 0 5px rgba(0, 255, 122, 0.4);
+    
+    /* Ensure the header text size never compresses */
+    flex-shrink: 0; 
+}
+
+/* Hardened Button List Wrapper Container */
+#button-container {
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px;
+    
+    /* Force the container to occupy the middle area and scroll if full */
+    flex-grow: 1;          
+    overflow-y: auto;      
+    min-height: 0;         /* Crucial component constraint for scrolling */
+    
+    margin-bottom: 15px;   
+    padding-right: 6px;    /* Structural room for your scrollbar handle */
+}
+
+/* Hardened Scroll Track Components */
+#button-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#button-container::-webkit-scrollbar-track {
+    background: #05070d;
+    border-left: 1px solid var(--border-frame);
+}
+
+#button-container::-webkit-scrollbar-thumb {
+    background: var(--border-frame);
+    border-radius: 3px;
+}
+
+#button-container::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-cyan);
 }
 
 /* Low-Fi 2000s Hardware Grid Frame Buttons */
