@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RK TEST - Image Showcase</title>
+    <link rel="stylesheet" href="styler.css">
+    <style>
+        /* Custom layout properties specifically for the grid matrix view */
+        .gallery-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .gallery-header {
+            padding: 20px;
+            background-color: var(--panel-solid);
+            border-bottom: 3px double var(--neon-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .gallery-header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+        }
+
+        .gallery-grid {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            min-height: 0;
+        }
+
+        /* 2000s Rigid Hardware Component Card Chassis */
+        .art-frame {
+            background: #0b111e;
+            border: 1px solid var(--border-frame);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.15s ease;
+        }
+
+        .art-frame:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(0, 234, 255, 0.2);
+        }
+
+        .art-frame img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border: 1px solid rgba(0, 234, 255, 0.1);
+            background: #05070d;
+        }
+
+        .art-meta {
+            font-size: 0.75rem;
+            color: var(--neon-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-top: 1px dashed var(--border-frame);
+            padding-top: 8px;
+        }
+
+        /* Custom tracking scrollbar for the image container matrix */
+        .gallery-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .gallery-grid::-webkit-scrollbar-track {
+            background: #05070d;
+            border-left: 1px solid var(--border-frame);
+        }
+        .gallery-grid::-webkit-scrollbar-thumb {
+            background: var(--border-frame);
+            border-radius: 3px;
+        }
+        .gallery-grid::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-cyan);
+        }
+
+        .back-btn {
+            color: var(--neon-pink);
+            text-decoration: none;
+            border: 1px solid var(--neon-pink);
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            background: rgba(255, 0, 85, 0.05);
+        }
+
+        .back-btn:hover {
+            background: var(--neon-pink);
+            color: var(--text-white);
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+        }
+    </style>
+</head>
+<body class="workspace-body" style="display: block; height: 100vh;">
+
+    <div class="gallery-container">
+        <div class="gallery-header">
+            <h1 style="color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 234, 255, 0.4);">IMAGE_SHOWCASE_STORAGE //</h1>
+            <a href="index.html" class="back-btn">← RETURN TO INDEX</a>
+        </div>
+
+        <div id="gallery-grid" class="gallery-grid">
+            </div>
+    </div>
+
+    <script>
+        // Points exactly to your subfolder path directory location
+        const targetFolder = 'Images showcase/';
+        const grid = document.getElementById('gallery-grid');
+
+        // 1. Send an internal frame call to fetch the folder path
+        fetch(targetFolder)
+            .then(response => response.text())
+            .then(htmlText => {
+                // 2. Parse out the HTML server page directory tree
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                let imgCount = 0;
+
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    
+                    // 3. Filter and grab only legitimate graphic entries
+                    if (href && (href.endsWith('.jpg') || href.endsWith('.jpeg') || href.endsWith('.png') || href.endsWith('.webp') || href.endsWith('.gif'))) {
+                        imgCount++;
+                        
+                        const decodedName = decodeURIComponent(href);
+                        
+                        // 4. Generate the tactical console card layout framework
+                        const frame = document.createElement('div');
+                        frame.className = 'art-frame';
+
+                        const img = document.createElement('img');
+                        img.src = targetFolder + href;
+                        img.alt = decodedName;
+
+                        const meta = document.createElement('div');
+                        meta.className = 'art-meta';
+                        meta.innerText = `[SYS_IMG_${imgCount.toString().padStart(3, '0')}] ${decodedName}`;
+
+                        frame.appendChild(img);
+                        frame.appendChild(meta);
+                        grid.appendChild(frame);
+                    }
+                });
+
+                // Display warning if folder is completely empty
+                if (imgCount === 0) {
+                    grid.innerHTML = `<div style="color: var(--neon-pink); grid-column: 1/-1; text-align: center; padding-top: 40px; font-weight: bold;">
+                        [WARNING] NO RECOGNIZED ASSETS FOUND IN '/Images showcase/' DIRECTORY.
+                    </div>`;
+                }
+            })
+            .catch(err => {
+                console.error("Directory link parsing error:", err);
+                grid.innerHTML = `<div style="color: var(--neon-pink); grid-column: 1/-1; text-align: center; padding-top: 40px; font-weight: bold;">
+                    [CRITICAL ERROR] FAILED TO MAP STORAGE SOURCE CORE.<br>
+                    CHECK LOCAL SERVER BATCH RUNNER LOG EXECUTIONS.
+                </div>`;
+            });
+    </script>
+
+</body>
+</html>
