@@ -119,7 +119,7 @@
         </div>
 
         <div id="gallery-grid" class="gallery-grid">
-            </div>
+        </div>
     </div>
 
     <script>
@@ -143,11 +143,10 @@
                     frame.className = 'art-frame';
 
                     const img = document.createElement('img');
-                    img.src = targetFolder + filename;
                     img.alt = filename;
 
                     // 🛠️ THE IMAGE RESOLUTION CONDITIONAL SWITCH
-                    // Fires automatically the exact microsecond the graphic loads into memory
+                    // Attach execution rules BEFORE setting the .src attribute so it never misses cached files
                     img.onload = function() {
                         const width = this.naturalWidth;
                         const height = this.naturalHeight;
@@ -163,6 +162,9 @@
                             console.log(`[RENDER ENGINE] Standard Smoothing Allowed: ${filename} (${width}x${height})`);
                         }
                     };
+
+                    // Trigger the image data stream load
+                    img.src = targetFolder + filename;
 
                     const meta = document.createElement('div');
                     meta.className = 'art-meta';
