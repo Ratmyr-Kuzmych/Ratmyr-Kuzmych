@@ -62,6 +62,7 @@
             object-fit: cover;
             border: 1px solid rgba(0, 234, 255, 0.1);
             background: #05070d;
+            cursor: pointer; /* Signal interactiveness to user */
         }
 
         .art-meta {
@@ -74,6 +75,65 @@
             text-overflow: ellipsis;
             border-top: 1px dashed var(--border-frame);
             padding-top: 8px;
+        }
+
+        /* 🛰️ FULLSCREEN LIGHTBOX TERMINAL MATRIX OVERLAY */
+        .lightbox-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 7, 13, 0.95); /* Matches --bg-matrix with heavy transparency */
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 80%;
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 25px rgba(0, 234, 255, 0.3);
+            background: #000;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            color: var(--neon-pink);
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            background: rgba(255, 0, 85, 0.05);
+            border: 1px solid var(--neon-pink);
+            padding: 8px 16px;
+            cursor: pointer;
+            text-shadow: 0 0 8px rgba(255, 0, 85, 0.4);
+            box-shadow: 0 0 8px rgba(255, 0, 85, 0.2);
+        }
+
+        .lightbox-close:hover {
+            background: var(--neon-pink);
+            color: var(--text-white);
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.6);
+        }
+
+        .lightbox-meta {
+            margin-top: 15px;
+            color: var(--neon-green);
+            font-family: monospace;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 0 6px rgba(0, 255, 122, 0.3);
         }
 
         /* Custom tracking scrollbar for the image container matrix */
@@ -122,9 +182,21 @@
         </div>
     </div>
 
+    <div id="lightbox" class="lightbox-overlay">
+        <button id="lightbox-close" class="lightbox-close">[X] CLOSE_VIEW</button>
+        <img id="lightbox-img" class="lightbox-content" src="" alt="Fullscreen Terminal Asset">
+        <div id="lightbox-meta" class="lightbox-meta"></div>
+    </div>
+
     <script>
         const targetFolder = 'Images/';
         const grid = document.getElementById('gallery-grid');
+        
+        // Grab Lightbox DOM Elements
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxMeta = document.getElementById('lightbox-meta');
+        const lightboxClose = document.getElementById('lightbox-close');
 
         // 1. Fetch the explicit asset list array from your imagesList.json file map
         fetch('imagesList.json')
@@ -146,21 +218,28 @@
                     img.alt = filename;
 
                     // 🛠️ THE IMAGE RESOLUTION CONDITIONAL SWITCH
-                    // Attach execution rules BEFORE setting the .src attribute so it never misses cached files
                     img.onload = function() {
                         const width = this.naturalWidth;
                         const height = this.naturalHeight;
 
                         // Check resolution bounds against your precise hardware threshold
                         if (width < 320 && height < 220) {
-                            // Enforces raw, pixel-perfect scaling (No Bilinear Filtering)
                             this.style.imageRendering = 'pixelated';
                             console.log(`[RENDER ENGINE] Pixel-Perfect Enforced: ${filename} (${width}x${height})`);
                         } else {
-                            // Allows smooth default browser bilinear/bicubic blending
                             this.style.imageRendering = 'auto';
                             console.log(`[RENDER ENGINE] Standard Smoothing Allowed: ${filename} (${width}x${height})`);
                         }
+                    };
+
+                    // 🛠️ INTERCEPT CLICK EVENT FOR FULLSCREEN VIEW
+                    img.onclick = function() {
+                        lightboxImg.src = this.src;
+                        // Synchronize the pixelated scale architecture over to the full view container!
+                        lightboxImg.style.imageRendering = this.style.imageRendering;
+                        
+                        lightboxMeta.innerText = `[SYS_PREVIEW_MODE] // ${filename} (${this.naturalWidth}x${this.naturalHeight})`;
+                        lightbox.style.display = 'flex';
                     };
 
                     // Trigger the image data stream load
@@ -189,6 +268,29 @@
                     ENSURE FILE IS COMMITTED TO YOUR GIT REPOSITORY AND CASING MATCHES EXACTLY.
                 </div>`;
             });
+
+        // 🎛️ MODAL CLOSING LOGIC CONTROL SEQUENCE
+        function deactivateLightbox() {
+            lightbox.style.display = 'none';
+            lightboxImg.src = ''; // Purges cache link memory allocation to stop layout leaks
+        }
+
+        // Close via Button
+        lightboxClose.onclick = deactivateLightbox;
+
+        // Close if user clicks anywhere on the dark overlay background area
+        lightbox.onclick = function(e) {
+            if (e.target === lightbox) {
+                deactivateLightbox();
+            }
+        };
+
+        // Escape Key Global Hardware Handler Execution
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && lightbox.style.display === 'flex') {
+                deactivateLightbox();
+            }
+        });
     </script>
 </body>
 </html>
