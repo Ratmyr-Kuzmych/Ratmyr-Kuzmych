@@ -126,7 +126,7 @@
         const targetFolder = 'Images/';
         const grid = document.getElementById('gallery-grid');
 
-        // 1. Fetch the explicit asset list array from your images.json file map
+        // 1. Fetch the explicit asset list array from your imagesList.json file map
         fetch('imagesList.json')
             .then(response => {
                 if (!response.ok) throw new Error("JSON file deployment missing");
@@ -146,6 +146,24 @@
                     img.src = targetFolder + filename;
                     img.alt = filename;
 
+                    // 🛠️ THE IMAGE RESOLUTION CONDITIONAL SWITCH
+                    // Fires automatically the exact microsecond the graphic loads into memory
+                    img.onload = function() {
+                        const width = this.naturalWidth;
+                        const height = this.naturalHeight;
+
+                        // Check resolution bounds against your precise hardware threshold
+                        if (width < 320 && height < 220) {
+                            // Enforces raw, pixel-perfect scaling (No Bilinear Filtering)
+                            this.style.imageRendering = 'pixelated';
+                            console.log(`[RENDER ENGINE] Pixel-Perfect Enforced: ${filename} (${width}x${height})`);
+                        } else {
+                            // Allows smooth default browser bilinear/bicubic blending
+                            this.style.imageRendering = 'auto';
+                            console.log(`[RENDER ENGINE] Standard Smoothing Allowed: ${filename} (${width}x${height})`);
+                        }
+                    };
+
                     const meta = document.createElement('div');
                     meta.className = 'art-meta';
                     meta.innerText = `[SYS_IMG_${imgCount.toString().padStart(3, '0')}] ${filename}`;
@@ -158,18 +176,17 @@
                 // Display warning if array is completely blank
                 if (imgCount === 0) {
                     grid.innerHTML = `<div style="color: var(--neon-pink); grid-column: 1/-1; text-align: center; padding-top: 40px; font-weight: bold;">
-                        [WARNING] NO RECOGNIZED ASSETS DEPLOYED INSIDE 'images.json'.
+                        [WARNING] NO RECOGNIZED ASSETS DEPLOYED INSIDE 'imagesList.json'.
                     </div>`;
                 }
             })
             .catch(err => {
                 console.error("Database initialization error:", err);
                 grid.innerHTML = `<div style="color: var(--neon-pink); grid-column: 1/-1; text-align: center; padding-top: 40px; font-weight: bold;">
-                    [CRITICAL ERROR] FAILED TO READ 'images.json' CORE MAP.<br>
-                    ENSURE FILE IS COMMITTED TO YOUT GIT REPOSITORY.
+                    [CRITICAL ERROR] FAILED TO READ 'imagesList.json' CORE MAP.<br>
+                    ENSURE FILE IS COMMITTED TO YOUR GIT REPOSITORY AND CASING MATCHES EXACTLY.
                 </div>`;
             });
     </script>
-
 </body>
 </html>
