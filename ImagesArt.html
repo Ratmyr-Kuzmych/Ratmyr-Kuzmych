@@ -119,64 +119,54 @@
         </div>
 
         <div id="gallery-grid" class="gallery-grid">
-        </div>
+            </div>
     </div>
 
     <script>
-        // Points exactly to your subfolder path directory location
         const targetFolder = 'Images/';
         const grid = document.getElementById('gallery-grid');
 
-        // 1. Send an internal frame call to fetch the folder path
-        fetch(targetFolder)
-            .then(response => response.text())
-            .then(htmlText => {
-                // 2. Parse out the HTML server page directory tree
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, 'text/html');
-                const links = doc.querySelectorAll('a');
-                
+        // 1. Fetch the explicit asset list array from your images.json file map
+        fetch('imagesList.json')
+            .then(response => {
+                if (!response.ok) throw new Error("JSON file deployment missing");
+                return response.json();
+            })
+            .then(imageFiles => {
                 let imgCount = 0;
 
-                links.forEach(link => {
-                    const href = link.getAttribute('href');
+                imageFiles.forEach(filename => {
+                    imgCount++;
                     
-                    // 3. Filter and grab only legitimate graphic entries
-                    if (href && (href.endsWith('.jpg') || href.endsWith('.jpeg') || href.endsWith('.png') || href.endsWith('.webp') || href.endsWith('.gif'))) {
-                        imgCount++;
-                        
-                        const decodedName = decodeURIComponent(href);
-                        
-                        // 4. Generate the tactical console card layout framework
-                        const frame = document.createElement('div');
-                        frame.className = 'art-frame';
+                    // 2. Generate the tactical console card layout framework
+                    const frame = document.createElement('div');
+                    frame.className = 'art-frame';
 
-                        const img = document.createElement('img');
-                        img.src = targetFolder + href;
-                        img.alt = decodedName;
+                    const img = document.createElement('img');
+                    img.src = targetFolder + filename;
+                    img.alt = filename;
 
-                        const meta = document.createElement('div');
-                        meta.className = 'art-meta';
-                        meta.innerText = `[SYS_IMG_${imgCount.toString().padStart(3, '0')}] ${decodedName}`;
+                    const meta = document.createElement('div');
+                    meta.className = 'art-meta';
+                    meta.innerText = `[SYS_IMG_${imgCount.toString().padStart(3, '0')}] ${filename}`;
 
-                        frame.appendChild(img);
-                        frame.appendChild(meta);
-                        grid.appendChild(frame);
-                    }
+                    frame.appendChild(img);
+                    frame.appendChild(meta);
+                    grid.appendChild(frame);
                 });
 
-                // Display warning if folder is completely empty
+                // Display warning if array is completely blank
                 if (imgCount === 0) {
                     grid.innerHTML = `<div style="color: var(--neon-pink); grid-column: 1/-1; text-align: center; padding-top: 40px; font-weight: bold;">
-                        [WARNING] NO RECOGNIZED ASSETS FOUND IN '/Images/' DIRECTORY.
+                        [WARNING] NO RECOGNIZED ASSETS DEPLOYED INSIDE 'images.json'.
                     </div>`;
                 }
             })
             .catch(err => {
-                console.error("Directory link parsing error:", err);
+                console.error("Database initialization error:", err);
                 grid.innerHTML = `<div style="color: var(--neon-pink); grid-column: 1/-1; text-align: center; padding-top: 40px; font-weight: bold;">
-                    [CRITICAL ERROR] FAILED TO MAP STORAGE SOURCE CORE.<br>
-                    CHECK LOCAL SERVER BATCH RUNNER LOG EXECUTIONS.
+                    [CRITICAL ERROR] FAILED TO READ 'images.json' CORE MAP.<br>
+                    ENSURE FILE IS COMMITTED TO YOUT GIT REPOSITORY.
                 </div>`;
             });
     </script>
