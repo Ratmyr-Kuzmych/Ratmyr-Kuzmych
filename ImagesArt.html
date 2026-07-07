@@ -92,6 +92,7 @@
             flex-direction: column;
             padding: 20px;
             box-sizing: border-box;
+            overflow: hidden; /* Prevent canvas overflowing page edges during intense zooms */
         }
 
         .lightbox-content {
@@ -101,6 +102,10 @@
             box-shadow: 0 0 25px rgba(0, 234, 255, 0.3);
             background: #000;
             object-fit: contain;
+            user-select: none; /* Stops text-selection bugs when dragging image */
+            -webkit-user-drag: none; /* Disables standard browser ghost image dragging */
+            cursor: grab; /* Informs user image can be repositioned */
+            will-change: transform; /* Optimizes GPU redraw cycles during transforms */
         }
 
         .lightbox-close {
@@ -118,6 +123,7 @@
             cursor: pointer;
             text-shadow: 0 0 8px rgba(255, 0, 85, 0.4);
             box-shadow: 0 0 8px rgba(255, 0, 85, 0.2);
+            z-index: 10001;
         }
 
         .lightbox-close:hover {
@@ -127,13 +133,18 @@
         }
 
         .lightbox-meta {
-            margin-top: 15px;
+            position: absolute;
+            bottom: 25px;
             color: var(--neon-green);
             font-family: monospace;
             font-size: 0.85rem;
             letter-spacing: 1px;
             text-transform: uppercase;
             text-shadow: 0 0 6px rgba(0, 255, 122, 0.3);
+            background: rgba(13, 19, 32, 0.8);
+            padding: 6px 12px;
+            border: 1px dashed rgba(0, 255, 122, 0.3);
+            z-index: 10001;
         }
 
         /* Custom tracking scrollbar for the image container matrix */
@@ -198,6 +209,23 @@
         const lightboxMeta = document.getElementById('lightbox-meta');
         const lightboxClose = document.getElementById('lightbox-close');
 
+        // 🛰️ GLOBAL COORDINATE STATE REGISTER FOR ZOOM & PANNING
+        let zoomScale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+
+        // Render Transform Update Vector
+        function applyMatrixTransformation() {
+            lightboxImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
+            
+            // Appends standard info combined with current magnification values
+            const baseInfo = lightboxImg.getAttribute('data-meta-base');
+            lightboxMeta.innerText = `${baseInfo} // [ZOOM: ${Math.round(zoomScale * 100)}%]`;
+        }
+
         // 1. Fetch the explicit asset list array from your imagesList.json file map
         fetch('imagesList.json')
             .then(response => {
@@ -238,8 +266,16 @@
                         // Synchronize the pixelated scale architecture over to the full view container!
                         lightboxImg.style.imageRendering = this.style.imageRendering;
                         
-                        lightboxMeta.innerText = `[SYS_PREVIEW_MODE] // ${filename} (${this.naturalWidth}x${this.naturalHeight})`;
+                        // Reset spatial registers on initialization
+                        zoomScale = 1;
+                        translateX = 0;
+                        translateY = 0;
+
+                        const baseMetaText = `[SYS_PREVIEW_MODE] // ${filename} (${this.naturalWidth}x${this.naturalHeight})`;
+                        lightboxImg.setAttribute('data-meta-base', baseMetaText);
+                        
                         lightbox.style.display = 'flex';
+                        applyMatrixTransformation();
                     };
 
                     // Trigger the image data stream load
@@ -289,6 +325,68 @@
         window.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && lightbox.style.display === 'flex') {
                 deactivateLightbox();
+            }
+        });
+
+
+        // ==========================================================================
+        // 🛰️ HARDWARE MOUSE INTERFACE CONTROLS (ZOOM & PAN EXECUTION)
+        // ==========================================================================
+
+        // 1. Mouse Scroll Wheel Scaler
+        lightbox.addEventListener('wheel', function(e) {
+            if (lightbox.style.display !== 'flex') return;
+            e.preventDefault(); // Defuses standard browser page-scroll behaviors
+
+            // Geometric scaling step calculation factor
+            const scalingFactor = 1.15;
+            
+            if (e.deltaY < 0) {
+                zoomScale *= scalingFactor; // Zoom In
+            } else {
+                zoomScale /= scalingFactor; // Zoom Out
+            }
+
+            // Hard constraints: 0.4x (for massive 2K arrays) to 64.0x (for micro 32x32 sprites)
+            zoomScale = Math.max(0.4, Math.min(zoomScale, 64));
+
+            applyMatrixTransformation();
+        }, { passive: false });
+
+        // 2. Click and Drag Panning Core Logic
+        lightboxImg.addEventListener('mousedown', function(e) {
+            e.preventDefault(); // Suppresses default image copy-dragging outlines
+            isDragging = true;
+            
+            // Calculates relative start offset coordinates
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            
+            lightboxImg.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            // Evaluates real-time vector translation distance
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            
+            applyMatrixTransformation();
+        });
+
+        window.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                lightboxImg.style.cursor = 'grab';
+            }
+        });
+
+        // Safety fallback anchor: Cancels tracking if mouse exits active viewport space
+        window.addEventListener('mouseleave', function() {
+            if (isDragging) {
+                isDragging = false;
+                lightboxImg.style.cursor = 'grab';
             }
         });
     </script>
