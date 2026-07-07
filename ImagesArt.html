@@ -106,6 +106,10 @@
             -webkit-user-drag: none; /* Disables standard browser ghost image dragging */
             cursor: grab; /* Informs user image can be repositioned */
             will-change: transform; /* Optimizes GPU redraw cycles during transforms */
+
+            /*Force rendr Pixelperfect*/
+            image-rendering: pixelated; 
+            image-rendering: crisp-edges; /* Fallback support for older browser versions */
         }
 
         .lightbox-close {
