@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RK TEST - Video Workflows</title>
+    <link rel="stylesheet" href="styler.css">
+    <style>
+        /* Layout Framework for Video Matrix */
+        .gallery-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .gallery-header {
+            padding: 20px;
+            background-color: var(--panel-solid);
+            border-bottom: 3px double var(--neon-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .gallery-header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+        }
+
+        .gallery-grid {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            min-height: 0;
+        }
+
+        /* 📺 2000s Sci-Fi Video Card Chassis */
+        .video-frame {
+            background: #0b111e;
+            border: 1px solid var(--border-frame);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .video-frame:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(0, 234, 255, 0.2);
+        }
+
+        /* Video preview block - acts as a static layout box */
+        .video-preview-wrapper {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: #05070d;
+            border: 1px solid rgba(0, 234, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-preview-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none; /* Let clicks pass directly through to card event list */
+        }
+
+        /* Glowing Retro Play Symbol Overlay */
+        .play-overlay {
+            position: absolute;
+            font-size: 2rem;
+            color: rgba(0, 234, 255, 0.6);
+            text-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+            transition: transform 0.2s ease, color 0.2s ease;
+            z-index: 2;
+        }
+
+        .video-frame:hover .play-overlay {
+            transform: scale(1.15);
+            color: var(--neon-cyan);
+            text-shadow: 0 0 15px rgba(0, 234, 255, 0.8);
+        }
+
+        .video-meta {
+            font-size: 0.75rem;
+            color: var(--neon-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-top: 1px dashed var(--border-frame);
+            padding-top: 8px;
+        }
+
+        /* 📡 FULLSCREEN LIGHTBOX TERMINAL MATRIX OVERLAY */
+        .lightbox-overlay {
+            display: none; /* Hidden on initialization */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 7, 13, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* Keeps video from exploding past 80% screen limits on high resolutions */
+        .lightbox-content-wrapper {
+            position: relative;
+            max-width: 80%;
+            max-height: 75%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 25px rgba(0, 234, 255, 0.3);
+            background: #000;
+        }
+
+        .lightbox-video {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            display: block;
+            outline: none;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            color: var(--neon-pink);
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            background: rgba(255, 0, 85, 0.05);
+            border: 1px solid var(--neon-pink);
+            padding: 8px 16px;
+            cursor: pointer;
+            text-shadow: 0 0 8px rgba(255, 0, 85, 0.4);
+            box-shadow: 0 0 8px rgba(255, 0, 85, 0.2);
+            z-index: 10001;
+        }
+
+        .lightbox-close:hover {
+            background: var(--neon-pink);
+            color: var(--text-white);
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.6);
+        }
+
+        .lightbox-meta {
+            position: absolute;
+            bottom: 25px;
+            color: var(--neon-green);
+            font-family: monospace;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 0 6px rgba(0, 255, 122, 0.3);
+            background: rgba(13, 19, 32, 0.8);
+            padding: 6px 12px;
+            border: 1px dashed rgba(0, 255, 122, 0.3);
+            z-index: 10001;
+        }
+
+        /* Scrollbar adjustment controls */
+        .gallery-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .gallery-grid::-webkit-scrollbar-track {
+            background: #05070d;
+            border-left: 1px solid var(--border-frame);
+        }
+        .gallery-grid::-webkit-scrollbar-thumb {
+            background: var(--border-frame);
+            border-radius: 3px;
+        }
+        .gallery-grid::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-cyan);
+        }
+
+        .back-btn {
+            color: var(--neon-pink);
+            text-decoration: none;
+            border: 1px solid var(--neon-pink);
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            background: rgba(255, 0, 85, 0.05);
+        }
+
+        .back-btn:hover {
+            background: var(--neon-pink);
+            color: var(--text-white);
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+        }
+    </style>
+</head>
+<body class="workspace-body" style="display: block; height: 100vh; margin: 0;">
+
+    <div class="gallery-container">
+        <div class="gallery-header">
+            <h1 style="color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 234, 255, 0.4);">VIDEO_WORKFLOWS_REPOSITORY //</h1>
+            <a href="index.html" class="back-btn">← RETURN TO INDEX</a>
+        </div>
+
+        <div id="video-grid" class="gallery-grid">
+            </div>
+    </div>
+
+    <div id="video-lightbox" class="lightbox-overlay">
+        <button id="lightbox-close" class="lightbox-close">[X] CLOSE_VIEW</button>
+        <div class="lightbox-content-wrapper">
+            <video id="lightbox-video" class="lightbox-video" controls autoplay></video>
+        </div>
+        <div id="lightbox-meta" class="lightbox-meta"></div>
+    </div>
+
+    <script>
+        const targetFolder = 'videos/';
+        const grid = document.getElementById('video-grid');
+        
+        // Grab Lightbox DOM Elements
+        const lightbox = document.getElementById('video-lightbox');
+        const lightboxVideo = document.getElementById('lightbox-video');
+        const lightboxMeta = document.getElementById('lightbox-meta');
+        const lightboxClose = document.getElementById('lightbox-close');
+
+        // Fetch index configurations
+        fetch('videoList.json')
+            .then(response => {
+                if (!response.ok) throw new Error("JSON file deployment missing");
+                return response.json();
+            })
+            .then(videoFiles => {
+                let videoCount = 0;
+
+                videoFiles.forEach(filename => {
+                    videoCount++;
+                    
+                    const frame = document.createElement('div');
+                    frame.className = 'video-frame';
+
+                    // Build wrapper preview node with muted static preview stream
+                    const previewWrapper = document.createElement('div');
+                    previewWrapper.className = 'video-preview-wrapper';
+
+                    const vidPreview = document.createElement('video');
+                    vidPreview.src = targetFolder + filename;
+                    vidPreview.preload = "metadata"; // Efficient load: grabs basic structures only
+                    vidPreview.muted = true;
+                    vidPreview.playsInline = true;
+
+                    const playIcon = document.createElement('div');
+                    playIcon.className = 'play-overlay';
+                    playIcon.innerText = '▶';
+
+                    previewWrapper.appendChild(vidPreview);
+                    previewWrapper.appendChild(playIcon);
+
+                    // Dynamic runtime switch on user clicks
+                    frame.onclick = function() {
+                        lightboxVideo.src = targetFolder + filename;
+                        lightboxMeta.innerText = `[SYS_PREVIEW_MODE] // ${filename}`;
+                        lightbox.style.display = 'flex';
+                        
+                        // Fire playback engine
+                        lightboxVideo.play();
+                    };
+
+                    const meta = document.createElement('div');
+                    meta.className = 'video-meta';
+                    meta.innerText = `[SYS_VID_${videoCount.toString().padStart(3, '0')}] ${filename}`;
+
+                    frame.appendChild(previewWrapper);
+                    frame.appendChild(meta);
+                    grid.appendChild(frame);
+                });
+
+                if (videoCount === 0) {
+                    grid.innerHTML = `<div style="color: var(--neon-pink); grid-column: 1/-1; text-align: center; padding-top: 40px; font-weight: bold;">
+                        [WARNING] NO RECOGNIZED ASSETS DEPLOYED INSIDE 'videoList.json'.
+                    </div>`;
+                }
+            })
+            .catch(err => {
+                console.error("Database initialization error:", err);
+                grid.innerHTML = `<div style="color: var(--neon-pink); grid-column: 1/-1; text-align: center; padding-top: 40px; font-weight: bold;">
+                    [CRITICAL ERROR] FAILED TO READ 'videoList.json' CORE MAP.<br>
+                    ENSURE FILE IS COMMITTED TO YOUR GIT REPOSITORY AND CASING MATCHES EXACTLY.
+                </div>`;
+            });
+
+        // 🎛️ MODAL DEACTIVATION (Defuses runtime memory leaks & floating audio loops!)
+        function deactivateLightbox() {
+            lightbox.style.display = 'none';
+            lightboxVideo.pause(); // Halts video thread immediately
+            lightboxVideo.src = ''; // Flushes buffer allocation
+        }
+
+        lightboxClose.onclick = deactivateLightbox;
+
+        lightbox.onclick = function(e) {
+            // Close if clicking anywhere on the dark overlay boundary
+            if (e.target === lightbox) {
+                deactivateLightbox();
+            }
+        };
+
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && lightbox.style.display === 'flex') {
+                deactivateLightbox();
+            }
+        });
+    </script>
+</body>
+</html>
